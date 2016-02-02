@@ -1,0 +1,1137 @@
+## basic math operations
+1 + 3
+3*2
+3^2
+
+## constants
+pi
+letters
+month.name
+
+## how to get help
+?pi
+apropos('month')
+
+## variables
+x = 4
+x <- 4
+x
+
+x / 2
+x^2
+
+## TODO compute the square root of 2
+x^0.5
+
+## functions
+sqrt(x)
+sqrt(x = x)
+sin(pi / 2)
+
+## random numbers from uniform distribution (and NOT "run if")
+runif(2)
+round(runif(2))
+round(runif(2), 1)
+
+## define custom functions
+f <- function(x) 2 * x + 1
+f(5)
+f(pi)
+
+## combine values into a vector
+1:5
+seq(1, 5)
+?seq
+seq(1, 5, 0.1)
+
+## now we store a sequence from 1 to 5 by 0.1 as x and plot f(x)
+x <- seq(1, 5, 0.1)
+plot(x, f(x))
+plot(x, f(x), type = 'l')
+
+## adding a title and a grid to the plot
+plot(x, f(x), type = 'l', xlab = '', main = '2x+1')
+grid()
+
+## TODO draw a sine wave
+x <- seq(0, pi * 2, 0.1)
+plot(x, sin(x), type = 'l')
+
+## a simpler way for plotting functions
+curve(f)
+?curve
+
+curve(2*x + 1, from = 0, to = 50)
+curve(x + 1, add = TRUE, col = 'red')
+
+## TODO draw a sine wave with curve
+curve(sin, from = 0, to = 2*pi)
+
+## TODO simulate Brownian motion in 1D
+round(runif(5))
+
+## we transform the previously generated floating random numbers between 0 and 1
+## to either -1 or 1
+round(runif(5))*2 - 1
+
+## we compute the cumulative sum to identify the actual value for each iteration
+cumsum(round(runif(25))*2 - 1)
+plot(cumsum(round(runif(25))*2 - 1), type = 's')
+
+## set the random number generator to a specific state for reproducibility
+set.seed(42)
+plot(cumsum(round(runif(25))*2 - 1), type = 's')
+
+## a much simpler solution for the above
+plot(cumsum(sample(c(-1, 1), 25, replace = TRUE)), type = 's')
+
+## solution for the homework from the presentation:
+## check if the 1/10th of the number of carburetors in a Toyota Corolla (in mtcars) plus 0.05 equals to 0.15
+all.equal(mtcars["Toyota Corolla","carb"] / 10 + 0.05, 0.15)
+
+=====================================================================================
+## Review R object types from yesterday
+
+2
+pi
+'pi'
+1:5
+runif(5)
+c(1, 3, 5)
+c('a', 'b', 'c')
+letters[1:3]
+str(letters)
+letters[c(1, 3)]
+
+## custom vectors -> combine values into vector
+h <- c(174, 170, 160)
+w <- c(90, 80, 70)
+
+## render a scatterplot
+plot(h, w, main = "Demo", xlab = 'Height', ylab = 'Weight')
+
+## compute the correlation coefficient
+cor(w, h)
+
+## build a basic linear model
+lm(w ~ h)
+fit <- lm(w ~ h)
+summary(fit)
+
+## plot this model
+plot(h, w, main = "Demo", xlab = 'Height', ylab = 'Weight')
+abline(fit, col = 'red')
+
+## intro to data.frame object type
+df <- data.frame(weight = w, height = h)
+df
+str(df)
+df[1, ]
+df[, 1]
+df[3, 2]
+df$weight
+df$weight[2]
+
+## TODO how do you get 174 from the above matrix
+df[1, 2]
+
+## compute Body Mass Index (BMI) by:
+## a person's weight in kilograms divided by the square of height in meters
+df$height <- df$height / 100
+df
+df$bmi <- df$weight / df$height^2
+df
+
+## import more data with similar structure
+df <- read.csv('http://bit.ly/BudapestBI-R-csv')
+str(df)
+
+## TODO compute weight in kg, height in cm and BMI
+df$height <- df$heightIn * 2.54
+df$weight <- df$weightLb * 0.45
+df$bmi <- df$weight / (df$height/100)^2
+str(df)
+
+## #############################################################################
+## basic plots
+## #############################################################################
+
+## draw a histogram
+hist(df$bmi)
+## add two vertical lines with the limits of normal BMI
+abline(v = c(18.5, 25), col = 'red')
+
+## density plot on the same variable
+plot(density(df$bmi))
+
+## boxplot on the same variable
+boxplot(df$bmi)
+## with a split by gender
+boxplot(bmi ~ sex, df)
+
+## boxplot alternatives
+install.packages('vioplot')
+library(vioplot)
+par(mfrow=c(1,2))
+boxplot(df$bmi)
+## the violin plot includes the above boxplot + the kernel density plots
+vioplot(df$bmi)
+
+library(beanplot)
+par(mfrow=c(1,2))
+boxplot(df$bmi)
+beanplot(df$bmi)
+
+## revert the graphical device to include only one plot in the future
+par(mfrow=c(1,1))
+
+## example on the advantages of vioplot over boxplot
+boxplot(
+  rbeta(1e3, 0.1, 0.1),
+  runif(1e3)*2-0.5,
+  rnorm(1e3, 0.5, 0.75))
+
+vioplot(
+  rbeta(1e3, 0.1, 0.1),
+  runif(1e3)*2-0.5,
+  rnorm(1e3, 0.5, 0.75))
+
+## some pie chart alternatives
+pie(table(df$sex))
+barplot(table(df$sex))
+dotchart(table(df$sex))
+dotchart(table(df$sex), xlim = c(0, 150))
+
+## last important basic EDA plot
+pairs(df)
+plot(df)
+
+## #############################################################################
+## Wilkinson: The Grammar of Graphics
+## R implementation by Hadley Wickham: ggplot2
+## #############################################################################
+
+library(ggplot2)
+?diamonds
+
+## barplot with ggplot: you specify a dataset, then define an aesthetic and geom
+ggplot(diamonds, aes(x = cut)) + geom_bar()
+## and optionally some further layers (theme)
+ggplot(diamonds, aes(x = cut)) + geom_bar() + theme_bw()
+ggplot(diamonds, aes(x = cut)) + geom_bar(colour = "darkgreen", fill = "white") + theme_bw()
+
+## we can store the resulting plot as an R object for future reuse
+p <- ggplot(diamonds, aes(x = cut)) + geom_bar(colour = "darkgreen", fill = "white") + theme_bw()
+p
+
+## it's better to split long lines for easier reading
+p <- ggplot(diamonds, aes(x = cut)) +
+     geom_bar(colour = "darkgreen", fill = "white") +
+     theme_bw()
+p
+
+
+## coord transformations
+library(scales)
+p + scale_y_log10()
+p + scale_y_sqrt()
+p + scale_y_reverse()
+p + coord_flip()
+
+## facet => create separate plots per group
+p + facet_wrap( ~ clarity)
+p + facet_grid(color ~ clarity)
+
+## stacked, clustered bar charts
+p <- ggplot(diamonds, aes(x = color, fill = cut))
+p + geom_bar()
+p + geom_bar(position = "fill")
+p + geom_bar(position = "dodge")
+
+## histogram
+ggplot(diamonds, aes(x = price)) + geom_bar(binwidth = 100)
+ggplot(diamonds, aes(x = price)) + geom_bar(binwidth = 1000)
+ggplot(diamonds, aes(x = price)) + geom_bar(binwidth = 10000)
+
+## density plot
+ggplot(diamonds, aes(price, fill = cut)) + geom_density(alpha = 0.2) + theme_bw()
+
+## scatterplot
+p <- ggplot(diamonds, aes(x = carat, y = price)) + geom_point()
+
+## stacking layers
+p
+p <- p + geom_smooth()
+p
+p + geom_smooth(method = "lm", se = FALSE, color = 'red')
+
+ggplot(diamonds, aes(x = carat, y = price, colour = cut)) + geom_point() + geom_smooth()
+
+## themes
+library(ggthemes)
+p + theme_economist() + scale_colour_economist()
+p + theme_stata() + scale_colour_stata()
+p + theme_excel() + scale_colour_excel()
+p + theme_wsj() + scale_colour_wsj("colors6", "")
+p + theme_gdocs() + scale_colour_gdocs()
+
+## create a custom theme for future usage
+theme_custom <- function() {
+    theme(
+        axis.text = element_text(
+            family = 'Times New Roman',
+            color  = "orange",
+            size   = 12,
+            face   = "italic"),
+        axis.title = element_text(
+            family = 'Times New Roman',
+            color  = "orange",
+            size   = 16,
+            face   = "bold"),
+        axis.text.y = element_text(angle = 90, hjust = 0.5),
+        panel.background = element_rect(
+            fill = "orange",
+            color = "white",
+            size = 2)
+    )
+}
+p <- ggplot(diamonds, aes(x = carat, y = price, colour = cut)) + geom_point()
+p + theme_custom()
+## pick a color palette from http://colorbrewer2.org/
+p + theme_custom() + scale_color_brewer(palette = "Greens")
+## see more examples at http://docs.ggplot2.org/dev/vignettes/themes.html
+
+## quick exploratory data analysis with ggplot (similar to the pairs command)
+library(GGally)
+ggpairs(diamonds)
+ggpairs(df)
+
+## JavaScript libraries
+library(pairsD3)
+pairsD3(df)
+
+## Further reading at http://www.cookbook-r.com/Graphs/
+
+## TODO on mtcars
+##  * number of carburators
+##  * hp
+##  * barplot of carburators per am
+##  * boxplot of hp by carb
+##  * hp and wt by carb
+##  * hp and wt by carb regression
+
+==================================================================================================
+## warm-up exercises (similar to the exam) on the mtcars dataset
+## TODO number of carburators
+ggplot(mtcars, aes(x = carb)) + geom_bar()
+## TODO distribution of horsepowe
+ggplot(mtcars, aes(x = hp)) + geom_histogram()
+## TODO barplot of number of carburetors per transmission
+ggplot(mtcars, aes(x = carb)) + geom_bar() + facet_grid(. ~ am)
+## stacked bar chart
+str(mtcars)
+mtcars$am <- factor(mtcars$am)
+ggplot(mtcars, aes(x = carb, fill = am)) + geom_bar()
+mtcars$am <- factor(mtcars$am, levels = c(1, 0))
+ggplot(mtcars, aes(x = carb, fill = am)) + geom_bar()
+## grouped/dodged
+ggplot(mtcars, aes(x = carb, fill = factor(am))) + geom_bar(position = 'dodge')
+## TODO boxplot of horsepower by the number of carburetors
+ggplot(mtcars, aes(x = factor(am), y = hp)) + geom_boxplot()
+## TODO horsepower and weight by the number of carburetors
+ggplot(mtcars, aes(x = hp, y = wt)) + geom_point() + facet_grid(. ~ carb)
+## TODO horsepower and weight by the number of carburetors with a trend line
+ggplot(mtcars, aes(x = hp, y = wt)) + geom_point() + facet_grid(. ~ carb) + geom_smooth()
+ggplot(mtcars, aes(x = hp, y = wt)) + geom_point(aes(color = factor(carb))) + geom_smooth()
+ggplot(mtcars, aes(x = hp, y = wt, color = factor(carb))) + geom_point() + geom_smooth()
+
+## a custom ggplot theme
+theme_custom <- function() {
+    theme(
+        axis.text = element_text(
+            family = 'Times New Roman',
+            color  = "orange",
+            size   = 12,
+            face   = "italic"),
+        axis.title = element_text(
+            family = 'Times New Roman',
+            color  = "orange",
+            size   = 16,
+            face   = "bold"),
+        axis.text.y = element_text(angle = 90, hjust = 0.5),
+        panel.background = element_rect(
+            fill = "orange",
+            color = "white",
+            size = 2)
+    )
+}
+## create and store a scatterplot
+p <- ggplot(mtcars, aes(x = hp, y = wt)) + geom_point(aes(color = factor(carb))) + geom_smooth()
+## apply our custom theme
+p + theme_custom()
+## you pick a color palette from http://colorbrewer2.org
+p + theme_custom() + scale_color_brewer(palette = "Greens")
+## or define custom color palette
+cols <- c('black', 'pink', 'yellow', 'orange', 'blue', '#18BA34', 'white')
+p + scale_color_manual(values = cols)
+## find more ggplot2 details at http://www.cookbook-r.com
+
+## quick example on fetching data from the Internet
+library(XML)
+df <- readHTMLTable(readLines('https://en.wikipedia.org/wiki/FTSE_100_Index'),
+                    ## we need the 2nd table from this page
+                    ## the table includes the column names
+                    ## and let's not transform strings (character vectors) to factor
+                    which = 2, header = TRUE, stringsAsFactors = FALSE)
+str(df)
+
+## quick fix some dirty data
+df$'Market cap (£bn)' <- as.numeric(df$'Market cap (£bn)')
+## we use "sub" to substitute a pattern  (",") with an empty string
+df$Employees <- as.numeric(sub(',', '', df$Employees))
+str(df)
+
+## some descriptive stats
+min(df$Employees)
+max(df$Employees)
+range(df$Employees)
+sum(df$Employees)
+length(df$Employees)
+nrow(df)
+ncol(df)
+dim(df)
+
+summary(df)
+summary(df$Employees)
+fivenum(df$Employees)
+
+## compute summaries
+table(df$Sector)
+hist(df$'Market cap (£bn)')
+## we compute the mean of Employees for each sector
+aggregate(Employees ~ Sector, FUN = mean, data = df)
+## and we can use other functions as well
+aggregate(Employees ~ Sector, FUN = min, data = df)
+aggregate(Employees ~ Sector, FUN = sd, data = df)
+aggregate(Employees ~ Sector, FUN = var, data = df)
+aggregate(Employees ~ Sector, FUN = range, data = df)
+
+aggregate(`Market cap (£bn)` ~ Sector, FUN = mean, data = df)
+names(df)[4] <- 'cap'
+str(df)
+
+## TODO plot employees as the function of the cap with a linear model
+plot(Employees ~ cap, df)
+abline(lm(Employees ~ cap, df), col = 'red')
+
+## same with ggplot
+library(ggplot2)
+ggplot(df, aes(x = cap, y = Employees)) +
+    geom_point() +
+    geom_smooth(method = 'lm', se = FALSE, col = 'red')
+
+## verify that the association is low between these two variables
+cor(df$Employees, df$cap)
+
+## filter for the top 10 largest company by market cap
+head(df[order(df$cap, decreasing  = TRUE), ], 10)
+
+## subset
+subset(df, cap > 100)
+subset(df, cap > 100 & Employees > 1e5)
+
+ggplot(subset(df, Sector == 'Banking'), aes(x = cap, y = Employees)) +
+    geom_text(aes(label = Company))
+
+## avoid overlapping labels on the plot
+library(ggrepel)
+ggplot(subset(df, Sector == 'Banking'), aes(x = cap, y = Employees)) +
+    geom_point() +
+    geom_text_repel(aes(label = Company)) +
+    theme_bw()
+
+## #############################################################################
+## intro to data.table
+## #############################################################################
+
+library(data.table)
+library(hflights)
+dt <- data.table(hflights)
+str(dt)
+
+## filtering with data.table
+subset(dt, Dest == 'LAX')
+dt[Dest == 'LAX']
+
+dt[Dest == 'LAX', list(DepTime, ArrTime)]
+dt[Dest == 'LAX', .(DepTime, ArrTime)]
+
+## summaries with data.table
+dt[, mean(Cancelled)]
+dt[, mean(Cancelled), by = DayOfWeek]
+
+## let's fix the column name in the resulting summary
+dta <- dt[, mean(Cancelled), by = DayOfWeek]
+setnames(dta, 'V1', 'Cancelled')
+dta
+## or in one step
+dt[, .(Cancelled = mean(Cancelled)), by = DayOfWeek]
+
+## we can filter and compute a summary in the same step
+dt[, .N, by = list(DayOfWeek)]
+dt[Dest == 'LAX', .N, by = list(DayOfWeek)]
+dt[Dest == 'LAX', .(P = .N / dt[, .N] * 100), by = list(DayOfWeek)]
+
+## ordering
+dta <- dt[, .(Cancelled = mean(Cancelled)), by = DayOfWeek]
+setorder(dta, Cancelled)
+dta
+setorder(dta, DayOfWeek)
+dta
+
+## creating new features
+dt$DistanceKMs <- dt$Distance / 0.62137
+dt[, DistanceKMs := Distance / 0.62137]
+
+dt[, DayOfWeek := weekdays(as.Date(paste(Year, Month, DayofMonth, sep = '-')))]
+
+## data.table exercises
+## TODO find the shortest flight on each weekday
+dt[, min(Distance), by = DayOfWeek]
+dt[Distance == 79]
+## TODO find the number of cancelled flights
+dt[Cancelled == 1, .N]
+dt[, sum(Cancelled)]
+## TODO find the average delay to all destination
+dt[, mean(ArrDelay), by = Dest]
+dt[, mean(ArrDelay, na.rm = TRUE), by = Dest]
+## TODO is it only due to a small number of flights?
+dt[, .(.N, mean(ArrDelay, na.rm = TRUE)), by = Dest]
+dt[, .(.N, min(ArrDelay, na.rm = TRUE), mean(ArrDelay, na.rm = TRUE)), by = Dest]
+## TODO add some further metrics
+dt[, .(.N,
+       min(ArrDelay, na.rm = TRUE),
+       mean(ArrDelay, na.rm = TRUE),
+       max(ArrDelay, na.rm = TRUE)), by = Dest]
+dta <- dt[, .(.N,
+       min = min(ArrDelay, na.rm = TRUE),
+       avg = mean(ArrDelay, na.rm = TRUE),
+       max = max(ArrDelay, na.rm = TRUE)), by = Dest]
+setorder(dta, avg)
+dta
+## TODO plot the departure and arrival delays
+ggplot(dt, aes(x = DepDelay, y = ArrDelay)) + geom_point()
+ggplot(dt, aes(x = DepDelay, y = ArrDelay)) + geom_hex()
+## TODO plot the average departure and arrival delays per destination
+ggplot(dt[, .(ArrDelay = mean(ArrDelay, na.rm = TRUE),
+              DepDelay = mean(DepDelay, na.rm = TRUE)),
+          by = Dest], aes(x = DepDelay, y = ArrDelay, col = Dest)) + geom_point()
+ggplot(dt[, .(ArrDelay = mean(ArrDelay, na.rm = TRUE),
+              DepDelay = mean(DepDelay, na.rm = TRUE)),
+          by = Dest], aes(x = DepDelay, y = ArrDelay, label = Dest)) + geom_text()
+## TODO plot the average departure and arrival delays per flight (tail number) + size
+ggplot(dt[Distance < 2000,
+          .(dist  = mean(Distance, na.rm = TRUE),
+            delay = mean(ArrDelay, na.rm = TRUE),
+            .N),
+          by = TailNum], aes(x = dist, y = delay, size = N)) + geom_point(alpha = .3)
+
+## now let's do the same on the nycflights13::flights dataset
+library(nycflights13)
+flights <- data.table(flights)
+## TODO compute DayOfWeek
+flights[, DayOfWeek := weekdays(as.Date(paste(year, month, day, sep = '-')))]
+## TODO find the number of flights on each weekday
+flights[, .N, by = DayOfWeek]
+## TODO plot the average delay to all destination
+flights[, mean(arr_delay, na.rm = TRUE), by = dest]
+ggplot(flights[, mean(arr_delay, na.rm = TRUE), by = dest],
+       aes(x = dest, y = V1)) + geom_bar(stat = 'identity') + coord_flip()
+## TODO plot the average departure and arrival delays per destination
+ggplot(flights[, .(ArrDelay = mean(arr_delay, na.rm = TRUE),
+                   DepDelay = mean(dep_delay, na.rm = TRUE)),
+               by = dest], aes(x = DepDelay, y = ArrDelay, label = dest)) + geom_text()
+
+## #############################################################################
+## joins
+## #############################################################################
+
+str(airports)
+airports <- data.table(airports)
+airports[faa == 'LAX']
+
+## we merge the "airports" dataset to the "flights" based on the destination --
+## so we add new columns to the "flights" dataset from the "airports" dataset
+## by matching the "dest" column of "flights" with the "faa" column of "airports"
+merge(flights, airports, by.x = 'dest', by.y = 'faa')
+
+## we can merge to summary tables as well
+merge(flights[, .N, by = dest], airports, by.x = 'dest', by.y = 'faa')
+
+## inner VS left VS full join
+merge(flights[, .N, by = dest], airports, by.x = 'dest', by.y = 'faa', all.x = TRUE)
+merge(flights[, .N, by = dest], airports, by.x = 'dest', by.y = 'faa', all.x = TRUE)[is.na(name)]
+merge(flights[, .N, by = dest], airports, by.x = 'dest', by.y = 'faa', all.y = TRUE)
+
+## merge plane data in a similar way
+str(planes)
+planes <- data.table(planes)
+dt <- merge(flights[, .(delay = mean(arr_delay, na.rm = TRUE)), by = tailnum], planes, by = 'tailnum')
+dt[, mean(delay), by = type]
+dt[, mean(delay), by = engine]
+dt[, mean(delay), by = manufacturer]
+
+=======================================================================================================
+
+## DT examples
+set.seed(42)
+tx <- data.table(
+    item   = sample(letters[1:3], 10, replace = TRUE),
+    time   = as.POSIXct(as.Date('2016-01-01')) - runif(10) * 36*60^2,
+    amount = rpois(10, 25))
+prices <- data.table(
+    item  = letters[1:3],
+    date  = as.Date('2016-01-01') - 1:2,
+    price = as.vector(outer(c(100, 200, 300), c(1, 1.2))))
+items <- data.table(
+    item   = letters[1:3],
+    color  = c('red', 'white', 'red'),
+    weight = c(2, 4, 2.5))
+
+## DT exercises
+## TODO filter for the transaction with "b" items
+tx[item == 'b']
+## TODO filter for the transaction with less than 25 items
+tx[amount < 25]
+## TODO filter for the transaction with less then 25 "b" items
+tx[item == 'b' & amount < 25]
+## TODO count the number of transactions for each items
+tx[, .N, by = item]
+## TODO count the number of transactions for each day
+tx[, date := as.Date(time)]
+tx[, .N, by = date]
+## TODO count the overall number of items sold on each day
+tx[, sum(amount), by = date]
+
+## #############################################################################
+## joins
+## #############################################################################
+
+merge(tx, items, by = 'item')
+
+setkey(tx, item)
+setkey(items, item)
+items[tx]
+
+tx <- items[tx]
+
+## TODO count the number of transactions with "red" items
+tx[color == 'red', .N]
+
+## TODO count the overall revenue per colors
+setkey(prices, item, date)
+setkey(tx, item, date)
+tx <- prices[tx]
+tx[, sum(price * amount), by = color]
+
+## TODO count the overall weight of items sold on each day
+tx[, sum(weight), by = date]
+
+## TODO create a frequency table on the number of sold items per color
+tx[, .N, by = color]
+
+## #############################################################################
+## wide and long tables
+## #############################################################################
+
+## TODO create a frequency table on the number of sold items per color and date
+tx[, .N, by = .(color, date)]
+
+## traditional frequency table
+table(tx$color, tx$date)
+
+## reshape long and wide tables
+ft <- tx[, .N, by = .(color, date)]
+dcast(ft, date ~ color)
+dcast(ft, color ~ date)
+
+## ggplot needs long data
+ft  <- dcast(ft, color ~ date)
+ftl <- melt(ft, id.vars = 'color')
+ggplot(ftl, aes(variable, value, fill = color)) + geom_bar(stat = 'identity')
+
+## but we do not need to do that
+ftl <- tx[, .N, by = .(color, date)]
+ggplot(ftl, aes(date, N, fill = color)) + geom_bar(stat = 'identity')
+
+## #############################################################################
+## rolling joins
+## #############################################################################
+
+## TODO find the percentage of amount change between transactions
+tx[, diff(amount)]
+
+## but we need to order by time first
+setkey(tx, date)
+tx[, diff(amount)]
+
+## but now we want to merge the purchase price for the sold items
+purchases <- data.table(
+    item = letters[1:3],
+    date = as.Date('2016-01-01') - c(1, 10),
+    cost = as.vector(outer(c(100, 200, 300), c(0.5, 0.75))))
+
+setkey(tx, item, date)
+setkey(purchases, item, date)
+purchases[tx] # mind the NAs
+
+purchases[tx, roll = TRUE]
+purchases[tx, roll = 7]  # roll to purchase in the past week
+purchases[tx, roll = 30] # roll to purchase in the past month
+purchases[tx, roll = -1] # merge to the future cost
+
+## #############################################################################
+## introduction to modeling
+## #############################################################################
+
+df <- read.csv('http://bit.ly/BudapestBI-R-csv')
+setDT(df)
+
+df[, height := heightIn * 2.54]
+df[, weight := weightLb * 0.45]
+
+## compare a continuous variable by groups (categorical variable)
+ggplot(df, aes(sex, height)) + geom_boxplot()
+## statistical test: t-test, ANOVA
+t.test(height ~ sex, data = df) # diff (see means)
+
+## generalize this to multiple groups
+aov(height ~ sex, data = df)
+summary(aov(height ~ sex, data = df))
+summary(aov(weight ~ sex, data = df))
+
+## compare categorical variables
+df[, high := height > mean(height)]
+str(df)
+table(df$sex, df$high)
+chisq.test(table(df$sex, df$high))
+
+## TODO do this in the data.table way
+df[, .N, by = .(sex, high)]
+dcast(df[, .N, by = .(sex, high)], sex ~ high)
+
+chisq.test(dcast(df[, .N, by = .(sex, high)], sex ~ high)) # error
+chisq.test(dcast(df[, .N, by = .(sex, high)], sex ~ high)[, -1])
+
+library(descr)
+CrossTable(df$sex, df$high, chisq = TRUE)
+CrossTable(df$sex, df$high, asresid = TRUE, chisq = TRUE)
+
+## #############################################################################
+## Simpson's paradox
+## #############################################################################
+
+library(openxlsx)
+download.file('http://bit.ly/bickel-1975', 'bickel.xlsx', method = 'curl', extra = '-L')
+df <- read.xlsx('bickel.xlsx')
+setDT(df)
+## all data are dirty
+names(df)[1] <- 'department'
+
+## University of California, Berkeley was sued for bias against women in 1973
+## due to the percentage of admissions being lower for females
+df[, sum(admissions) / sum(applicants), by = gender]
+
+## seems to be right
+ft <- df[, .(Y = sum(admissions), N = sum(applicants) - sum(admissions)), by = gender]
+chisq.test(ft[, .(Y, N)])
+
+## BUT: if we do the same analysis for each department,
+##      this does not stand any more
+ft <- df[, .(Y = sum(admissions), N = sum(applicants) - sum(admissions)), by = .(gender, department)]
+chisq.test(ft[department == 'A', .(Y, N)])
+chisq.test(ft[department == 'B', .(Y, N)])
+chisq.test(ft[department == 'C', .(Y, N)])
+chisq.test(ft[department == 'D', .(Y, N)])
+chisq.test(ft[department == 'E', .(Y, N)])
+chisq.test(ft[department == 'F', .(Y, N)])
+
+## and more interestingly:
+## it seems the admission/rejection rate is very different for the departments
+ft <- df[, .(Y = sum(admissions), N = sum(applicants) - sum(admissions)), by = department]
+ft
+ft[, P := round(Y/(Y+N) * 100, 2)]
+ft
+chisq.test(ft[, .(Y, N)])
+
+## turns out males and females tend to apply for different departments
+ft <- df[, .(applicants = sum(applicants)), by = .(department, gender)]
+ft <- dcast(ft, department ~ gender)
+setDT(ft)
+ft[, ratio := f / m]
+ft
+
+===================================================================================================
+
+## #############################################################################
+## `data.table` exercises on the `nycflights13` dataset
+## #############################################################################
+
+library(nycflights13)
+flights <- data.table(nycflights13::flights)
+
+##  count the number of flights to LAX
+flights[dest == 'LAX', .N]
+
+##  count the number of flights to LAX from JFK
+flights[dest == 'LAX' & origin == 'JFK', .N]
+
+##  compute the average delay (in minutes) for flights from JFK to LAX
+flights[dest == 'LAX' & origin == 'JFK', mean(arr_delay, na.rm = TRUE)]
+
+##  which destination has the lowest average delay from JFK?
+flights[origin == 'JFK', mean(arr_delay, na.rm = TRUE), by = dest][which.min(V1)]
+
+##  plot the average delay to all destinations from JFK
+ggplot(flights[origin == 'JFK', .(delay = mean(arr_delay, na.rm = TRUE)), by = dest],
+       aes(x = dest, delay)) + geom_bar(stat = 'identity')
+
+##  plot the distribution of all flight delays to all destinations from JFK
+ggplot(flights[origin == 'JFK'], aes(x = dest, arr_delay)) + geom_boxplot()
+
+##  compute a new variable in flights showing the week of day
+flights[, weekday := weekdays(as.Date(paste(year, month, day, sep = '-')))]
+
+##  plot the number of flights per weekday
+ggplot(flights, aes(weekday)) + geom_bar()
+
+##  create a heatmap on the number of flights per weekday and hour of the day (see `geom_tile`)
+ggplot(flights[, .N, by = .(weekday, hour)], aes(weekday, hour, fill = N)) + geom_tile()
+
+##  merge the `airports` dataset to `flights` on the FAA airport code
+merge(flights, airports, by.x = 'dest', by.y = 'faa', all.x = TRUE)
+
+setkey(flights, dest)
+setkey(airports, faa)
+airports[flights]
+
+##  order the `weather` dataset by `year`, `month`, `day` and `hour`
+weather <- data.table(nycflights13::weather)
+setorder(weather, year, month, day, hour)
+
+##  plot the average temperature at noon in `EWR` for each month based on the `weather` dataset
+ggplot(weather[origin == 'EWR' & hour == 12, mean(temp), by = month],
+       aes(factor(month), V1)) + geom_bar(stat = 'identity')
+
+##  aggregate the `weather` dataset and store as `daily_temperatures` to show the daily average temperatures based on the `EWR` records
+daily_temperatures <- weather[, .(avg_temp = mean(temp)), by = .(year, month, day)]
+
+##  merge the `daily_temperatures` dataset to `flights` on the date
+setkey(daily_temperatures, year, month, day)
+setkey(flights, year, month, day)
+daily_temperatures[flights]
+
+## #############################################################################
+## linear models
+## #############################################################################
+
+df <- read.csv('http://bit.ly/BudapestBI-R-csv')
+setDT(df)
+
+df[, height := heightIn * 2.54]
+df[, weight := weightLb * 0.45]
+
+fit <- lm(weight ~ height, data = df)
+summary(fit)
+## discuss: coefficients, P values, overall P value, R^2
+
+## diagnose plot
+plot(df$height, df$weight)
+abline(fit, col = 'red')
+
+plot(df$height, df$weight)
+points(df$height, predict(fit), col = 'red', pch = 19)
+lines(df$height, predict(fit), col = 'red')
+
+plot(df$height, df$weight)
+abline(fit, col = 'red')
+segments(df$height, df$weight, df$height, predict(fit), col = 'green', pch = 19)
+## http://psycho.unideb.hu/statisztika/pages/interaktiv.html
+
+par(mfrow = c(2, 2))
+plot(fit)
+
+qqplot(df$height, df$weight)
+
+## extrapolation -- predict my son
+summary(fit)
+predict(fit)
+predict(fit, newdata = data.frame(height = 104))
+predict(fit, newdata = data.frame(height = 56))
+
+plot(df$height, df$weight, xlim = c(0, 200))
+abline(fit, col = 'red')
+
+plot(df$height, df$weight, xlim = c(0, 200), ylim = c(-100, 100))
+abline(fit, col = 'red')
+
+## polynomial model
+fit <- lm(weight ~ height + height * height, data = df)   # not OK
+fit
+
+## use the "I" function to refer to height-squared "as is"
+fit <- lm(weight ~ height + I(height^2), data = df)
+fit <- lm(weight ~ poly(height, 2, raw = TRUE), data = df)
+
+## compute manually
+x <- 56
+-7.79 + x * 0.004275 + (x^2) * 0.002161
+
+## TODO plot and analyze association between height and weight
+plot(df$height, df$weight)
+
+## plot polynomial model
+x <- 130:180
+y <- predict(fit, newdata = data.frame(height = 130:180))
+lines(x, y, col = 'red')
+
+x <- 0:200
+y <- predict(fit, newdata = data.frame(height = x))
+plot(df$height, df$weight, xlim = range(x))
+plot(df$height, df$weight, xlim = range(x), ylim = c(0, 200))
+lines(x, y, col = 'red')
+
+## TODO plot a polynomial model of higher degree
+fit <- lm(weight ~ poly(height, 5, raw = TRUE), data = df)
+
+y <- predict(fit, newdata = data.frame(height = x))
+plot(df$height, df$weight, xlim = range(x), ylim = c(0, 200))
+lines(x, y, col = 'red')
+
+## same with ggplot2
+ggplot(df, aes(x = height, y = weight)) + geom_point() +
+    geom_smooth(method = 'lm', se = FALSE)
+ggplot(df, aes(x = height, y = weight)) + geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 5))
+
+## #############################################################################
+## confounding variables
+## #############################################################################
+
+df <- read.csv('http://bit.ly/math_and_shoes')
+df$id <- NULL
+
+plot(df$size, df$math)
+summary(lm(math ~ size, df))
+
+plot(df$x, df$math)
+plot(df$x, df$size)
+
+## 3D scatterplot with plane
+library(scatterplot3d)
+p <- scatterplot3d(df[, c('size', 'x', 'math')])
+fit <- lm(math ~ size + x, df)
+p$plane3d(fit)
+
+## interactive 3D scatterplot with plane
+library(rgl)
+plot3d(df$x, df$size, df$math, col = 'red', size = 3)
+planes3d(5.561, 4.563, -1, -178.496, col = 'orange')
+
+cor(df)
+
+## computing partial correlation
+residuals(lm(math ~ x, df))
+residuals(lm(size ~ x, df))
+cor(residuals(lm(math ~ x, df)), residuals(lm(size ~ x, df)))
+
+library(psych)
+partial.r(df, 1:2, 3)
+
+## #############################################################################
+## feature selection
+## #############################################################################
+
+## TODO analyze iris dataset
+str(iris)
+plot(iris$Sepal.Length, iris$Sepal.Width)
+
+fit <- lm(Sepal.Width ~ Sepal.Length, data = iris)
+fit
+summary(fit)
+
+## now try
+plot(iris$Sepal.Length, iris$Sepal.Width, col = iris$Species)
+summary(lm(Sepal.Width ~ Sepal.Length + Species, data = iris))
+
+ggplot(iris, aes(Sepal.Length, Sepal.Width, col = Species)) +
+    geom_point() + geom_smooth(method = 'lm')
+
+ggplot(iris, aes(Sepal.Length, Sepal.Width)) +
+    geom_point(aes(col = Species)) +
+        geom_smooth(aes(col = Species), method = 'lm') +
+            geom_smooth(method = 'lm', col = 'black')
+
+## #############################################################################
+## clustering
+## #############################################################################
+
+## hierarchical method
+dm <- dist(iris[, 1:4])
+str(dm)
+summary(dm)
+
+hc <- hclust(dm)
+
+plot(hc)
+
+rect.hclust(hc, k = 3, border = 'red')
+
+cn <- cutree(hc, k = 3)
+plot(iris$Sepal.Length, iris$Sepal.Width, col = cn)
+plot(iris$Sepal.Length, iris$Sepal.Width, pch = cn, col = iris$Species)
+
+library(cluster)
+clusplot(iris[, 1:4], cn, color = TRUE, shade = TRUE, labels = 2)
+
+table(iris$Species, cn)
+
+## how many clusters?
+library(NbClust)
+NbClust(iris[, 1:4], method = 'complete')
+
+## k-means
+kc <- kmeans(iris[, 1:4], 3)
+str(kc)
+kc$cluster
+
+table(kc$cluster, cn)
+table(iris$Species, kc$cluster)
+
+## #############################################################################
+## introduction to supervised classification methods
+## #############################################################################
+
+## K-Nearest Neighbors algorithm
+setDT(iris)
+iris[, rnd := runif(150)]
+setorder(iris, rnd)
+iris
+iris[, rnd := NULL]
+
+train <- iris[1:100]
+test  <- iris[101:150]
+
+library(class)
+knn(train[, 1:4, with = FALSE], test[, 1:4, with = FALSE], train$Species)
+
+res <- knn(train[, 1:4, with = FALSE], test[, 1:4, with = FALSE], train$Species)
+table(test$Species, res)
+
+res <- knn(train[, 1:4, with = FALSE], test[, 1:4, with = FALSE], train$Species, k = 2)
+table(test$Species, res)
+
+## decision trees for classification
+library(rpart)
+ct <- rpart(Species ~ ., data = train)
+summary(ct)
+
+plot(ct); text(ct)
+
+predict(ct, newdata = test)
+predict(ct, newdata = test, type = 'class')
+
+table(test$Species, predict(ct, newdata = test, type = 'class'))
+
+## ?rpart.control
+ct <- rpart(Species ~ ., data = train, minsplit = 3)
+plot(ct); text(ct)
+
+## #############################################################################
+## exercises
+## #############################################################################
+
+## TODO model gender from the height/weight dataset
+df <- read.csv('http://bit.ly/BudapestBI-R-csv')
+ct <- rpart(sex ~ heightIn + weightLb, data = df)
+plot(ct); text(ct)
+
+ct <- rpart(sex ~ heightIn + weightLb, data = df, minsplit = 1)
+table(df$sex, predict(ct, type = 'class'))
+
+## #############################################################################
+## beware of overfitting: did you use test data?
+## #############################################################################
+
+## reorder data in random order
+set.seed(7)
+df <- df[order(runif(nrow(df))), ]
+
+## create training and test datasets
+train <- df[1:100, ]
+test  <- df[101:237, ]
+
+## pretty impressing results!
+ct <- rpart(sex ~ heightIn + weightLb, data = train, minsplit = 1)
+table(train$sex, predict(ct, type = 'class'))
+
+## but oops
+table(test$sex, predict(ct, newdata = test, type = 'class'))
+
+## with a more generalized model
+ct <- rpart(sex ~ heightIn + weightLb, data = train)
+table(train$sex, predict(ct, type = 'class'))
+table(test$sex, predict(ct, newdata = test, type = 'class'))
+
+## #############################################################################
+## other decision tree algorithms in R
+## #############################################################################
+
+## a uniform interface to ML models
+library(caret)
+tree <- train(sex ~ heightIn + weightLb, data = train, method = 'rpart')
+summary(tree)
+
+names(getModelInfo())
+
+train(sex ~ heightIn + weightLb, data = train, method = 'ctree')
+
+library(C50)
+tree <- train(sex ~ heightIn + weightLb, data = train, method = 'C5.0')
+summary(tree)
+
+## #############################################################################
+## PCA
+## #############################################################################
+
+setDF(iris)
+prcomp(iris[, 1:4])
+summary(prcomp(iris[, 1:4]))
+
+pc <- prcomp(iris[, 1:4], scale = TRUE)
+
+iris$pc1 <- pc$x[, 1]
+
+cutree(hclust(dist(iris$pc1)), 3)
+
+table(iris$Species, cutree(hclust(dist(iris$pc1)), 3))
+
+## #############################################################################
+## MDS
+## #############################################################################
+
+eurodist
+
+cmdscale(eurodist)
+
+m <- cmdscale(eurodist)
+plot(m)
+
+plot(m, type = 'n')
+text(m[, 1], m[, 2], labels(eurodist))
+
+m <- as.data.frame(m)
+ggplot(m, aes(V1, -V2, label = rownames(m))) + geom_text()
+
+library(ggrepel)
+ggplot(m, aes(V1, -V2, label = rownames(m))) + geom_text_repel()
