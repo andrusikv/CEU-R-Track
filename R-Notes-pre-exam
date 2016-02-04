@@ -1135,3 +1135,14 @@ ggplot(m, aes(V1, -V2, label = rownames(m))) + geom_text()
 
 library(ggrepel)
 ggplot(m, aes(V1, -V2, label = rownames(m))) + geom_text_repel()
+
+
+========================================================================================
+Type of variables:
+Use Bar chart:
+1. Nominal
+2. Ordinal - there is an order
+-----------------------------------
+Use Histogram:
+3. Interval - Celsius, I can compare the differences between values
+4. Ratio - Salary, I can say, I make twice as much money as others
